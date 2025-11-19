@@ -1,19 +1,20 @@
--- Indice per la ricerca delle corse per città e data
+Indice per la ricerca delle corse per città e data
 CREATE INDEX idx_corsa_citta_data
 ON Corsa (citta_partenza, citta_arrivo, data_partenza, ora_partenza);
 
--- Indice per lo storico delle prenotazioni di un cliente
+Indice per lo storico delle prenotazioni di un cliente
 CREATE INDEX idx_biglietto_cliente_data
 ON Biglietto (cod_fiscale, data_emissione);
 
--- Indice per i pagamenti di un cliente (es. controlli amministrativi)
+Indice per i pagamenti di un cliente (es. controlli amministrativi)
 CREATE INDEX idx_pagamento_cliente_data
 ON Pagamento (cod_fiscale, data_pagamento);
 
--- Indice per i controlli di validità di un biglietto
+Indice per i controlli di validità di un biglietto
 CREATE INDEX idx_validazione_biglietto_data
 ON Validazione (cod_biglietto, data_ora);
 
--- Indice per le assegnazioni degli autisti ai mezzi
+Indice per le assegnazioni degli autisti ai mezzi
 CREATE INDEX idx_mezzo_autista_matricola_data
 ON Mezzo_Autista (matricola, data_inizio, data_fine);
+
