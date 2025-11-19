@@ -1,0 +1,32 @@
+CLIENTE – EFFETTUA – PAGAMENTO
+Un cliente può effettuare 0, 1 o molti pagamenti → lato CLIENTE: (0,N)
+Ogni pagamento è effettuato da un solo cliente → lato PAGAMENTO: (1,1)
+
+CLIENTE – ISCRIVE – ABBONAMENTO
+Un cliente può avere 0, 1 o molti abbonamenti → lato CLIENTE: (0,N)
+Ogni abbonamento appartiene a un solo cliente → lato ABBONAMENTO: (1,1)
+
+
+PAGAMENTO – OTTIENE – BIGLIETTO
+Ogni pagamento genera esattamente un biglietto → lato PAGAMENTO: (1,1)
+Ogni biglietto è associato a esattamente un pagamento → lato BIGLIETTO: (1,1)
+
+BIGLIETTO – VERIFICA – VALIDAZIONE
+Un biglietto può essere verificato zero o più volte → lato BIGLIETTO: (0,N)  
+Ogni validazione si riferisce a un solo biglietto → lato VALIDAZIONE: (1,1)
+
+CORSA – EMETTE – BIGLIETTO
+Una corsa può emettere 0, 1 o molti biglietti → lato CORSA: (0,N)
+Ogni biglietto si riferisce a una sola corsa → lato BIGLIETTO: (1,1)
+
+TRATTA – GENERA – CORSA
+Una tratta può avere zero o più corse → lato TRATTA: (0,N)
+Ogni corsa è sempre legata a una o più tratte → lato CORSA: (1,N)
+
+CORSA – EFFETTUA – MEZZO
+Un mezzo può effettuare 0, 1 o molte corse → lato MEZZO: (0,N)
+Una corsa è effettuata da 0 o 1 mezzo → lato CORSA: (0,1)
+
+MEZZO – GUIDATO – AUTISTA
+Un mezzo può essere guidato, nel tempo, da 1 o più Autisti → lato MEZZO: (1,N)
+Un pilota può guidare, nel tempo, 0 o più mezzi → lato Autista: (0,N)
