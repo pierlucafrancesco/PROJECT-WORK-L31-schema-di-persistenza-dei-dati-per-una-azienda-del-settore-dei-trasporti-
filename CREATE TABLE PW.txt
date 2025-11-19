@@ -1,0 +1,126 @@
+CREATE TABLE Cliente (
+  	cod_fiscale CHAR(16) PRIMARY KEY,
+  	nome VARCHAR(50) NOT NULL,
+  	cognome VARCHAR(50) NOT NULL,
+  	email VARCHAR(100) NOT NULL UNIQUE,
+  	telefono VARCHAR(10) UNIQUE,
+  	data_nascita DATE,
+  	data_registrazione DATE
+);
+
+CREATE TABLE Mezzo (
+  	targa VARCHAR(7) PRIMARY KEY,
+  	tipo_mezzo VARCHAR(30) NOT NULL,
+  	capacita_posti INT NOT NULL
+);
+
+CREATE TABLE Autista (
+  	matricola VARCHAR (9) PRIMARY KEY,
+  	nome VARCHAR(50) NOT NULL,
+  	cognome VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Corsa (
+  	id_corsa VARCHAR(7) PRIMARY KEY,
+  	citta_partenza VARCHAR(100) NOT NULL,
+  	citta_arrivo VARCHAR(100) NOT NULL,
+  	data_partenza DATE NOT NULL,
+  	ora_partenza TIME NOT NULL,
+  	ora_arrivo TIME,
+  	posti_totali INT NOT NULL,
+  	posti_disponibili INT NOT NULL,
+  	targa VARCHAR(7),
+  	FOREIGN KEY (targa) REFERENCES Mezzo(targa)
+    		ON DELETE SET NULL
+    		ON UPDATE CASCADE
+);
+
+CREATE TABLE Tratta (
+  	id_tratta VARCHAR (5) PRIMARY KEY,
+  	citta_partenza VARCHAR(100) NOT NULL,
+  	citta_arrivo VARCHAR(100) NOT NULL,
+  	distanza_km DECIMAL(7,2),
+  	durata_minuti INT
+);
+
+CREATE TABLE Corsa_Tratta (
+  	id_corsa VARCHAR(7) NOT NULL,
+  	id_tratta VARCHAR (5) NOT NULL,
+  	numero_fermate INT NOT NULL,   
+  	PRIMARY KEY (id_corsa, numero_fermate),
+  	FOREIGN KEY (id_corsa) REFERENCES Corsa(id_corsa)
+    		ON DELETE CASCADE
+    		ON UPDATE CASCADE,
+  	FOREIGN KEY (id_tratta) REFERENCES Tratta(id_tratta)
+   		ON DELETE RESTRICT
+    		ON UPDATE CASCADE
+);
+
+CREATE TABLE Pagamento (
+  	cod_transazione VARCHAR(30) PRIMARY KEY, 
+  	cod_fiscale CHAR(16) NOT NULL,
+  	importo DECIMAL(8,2) NOT NULL,
+  	data_pagamento DATETIME, 
+  	metodo_pagamento VARCHAR(50) NOT NULL,
+  	stato_pagamento VARCHAR(20) DEFAULT 'completato',
+  	FOREIGN KEY (cod_fiscale) REFERENCES Cliente(cod_fiscale)
+   		ON DELETE RESTRICT
+    		ON UPDATE CASCADE
+);
+
+CREATE TABLE Abbonamento ( 
+	id_abbonamento VARCHAR(5) PRIMARY KEY, 
+    	cod_fiscale CHAR(16) NOT NULL, 
+    	tipo_abbonamento VARCHAR(50) NOT NULL, 
+    	data_inizio_validita DATE NOT NULL, 
+    	data_scadenza DATE NOT NULL, 
+    	stato_abbonamento VARCHAR(20) DEFAULT 'attivo', 
+    	FOREIGN KEY (cod_fiscale) REFERENCES Cliente(cod_fiscale) 
+		ON DELETE RESTRICT 
+		ON UPDATE CASCADE 
+);
+
+CREATE TABLE Biglietto ( 
+	cod_biglietto VARCHAR(7) PRIMARY KEY, 
+	cod_fiscale CHAR(16) NOT NULL, 
+	id_corsa VARCHAR(7) NOT NULL, 
+    	cod_transazione VARCHAR(30) NOT NULL, 
+   	data_emissione DATETIME NOT NULL, 
+    	prezzo DECIMAL(8,2) NOT NULL, 
+    	posto_assegnato VARCHAR(10), 
+    	stato_biglietto VARCHAR(20) DEFAULT 'valido', 
+    	FOREIGN KEY (cod_fiscale) REFERENCES Cliente(cod_fiscale) 
+		ON DELETE RESTRICT 
+        	ON UPDATE CASCADE, 
+	FOREIGN KEY (cod_transazione) REFERENCES Pagamento(cod_transazione) 
+		ON DELETE RESTRICT 
+        	ON UPDATE CASCADE, 
+	FOREIGN KEY (id_corsa) REFERENCES Corsa(id_corsa) 
+		ON DELETE RESTRICT 
+        	ON UPDATE CASCADE 
+);
+
+CREATE TABLE Validazione (
+  	id_validazione INT AUTO_INCREMENT PRIMARY KEY,
+  	cod_biglietto VARCHAR(7) NOT NULL,
+  	data_ora DATETIME NOT NULL,
+  	luogo VARCHAR(100),
+  	esito VARCHAR(20),
+  	FOREIGN KEY (cod_biglietto) REFERENCES Biglietto(cod_biglietto)
+    		ON DELETE CASCADE
+    		ON UPDATE CASCADE
+);
+
+CREATE TABLE Mezzo_Autista (
+  	targa VARCHAR(10) NOT NULL,
+  	matricola VARCHAR (9) NOT NULL,
+  	data_inizio DATE,
+  	data_fine DATE,
+  	PRIMARY KEY (targa, matricola, data_inizio),
+  	FOREIGN KEY (targa) REFERENCES Mezzo(targa)
+    		ON DELETE RESTRICT
+    		ON UPDATE CASCADE,
+  	FOREIGN KEY (matricola) REFERENCES Autista(matricola)
+    		ON DELETE RESTRICT
+    		ON UPDATE CASCADE
+);
