@@ -1,0 +1,170 @@
+1) Ricerca corse disponibili (con info sul prezzo)
+
+Cosa fa?
+Cerca le corse Roma → Milano in una data, con posti disponibili e, se esistono biglietti emessi, mostra il prezzo minimo/massimo dei biglietti venduti finora per quella corsa.
+
+SELECT 
+    c.id_corsa,
+    c.citta_partenza,
+    c.citta_arrivo,
+    c.data_partenza,
+    c.ora_partenza,
+    c.ora_arrivo,
+    c.posti_totali,
+    c.posti_disponibili,
+    m.cod_mezzo,
+    m.tipo_mezzo,
+    m.capacita_posti,
+    MIN(b.prezzo) AS prezzo_minimo,
+    MAX(b.prezzo) AS prezzo_massimo
+FROM Corsa c
+LEFT JOIN Mezzo m      ON c.cod_mezzo = m.cod_mezzo
+LEFT JOIN Biglietto b  ON c.id_corsa = b.id_corsa
+  AND b.stato_biglietto   = 'valido'
+WHERE c.citta_partenza    = 'Roma'
+  AND c.citta_arrivo      = 'Milano'
+  AND c.data_partenza     = '2025-03-10'
+  AND c.posti_disponibili > 0
+GROUP BY 
+    c.id_corsa,
+    c.citta_partenza,
+    c.citta_arrivo,
+    c.data_partenza,
+    c.ora_partenza,
+    c.ora_arrivo,
+    c.posti_totali,
+    c.posti_disponibili,
+    m.cod_mezzo,
+    m.tipo_mezzo,
+    m.capacita_posti
+ORDER BY c.data_partenza, c.ora_partenza;
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+2) Storico prenotazioni di un cliente
+
+Cosa fa?
+Mostra, per un cliente, tutti i biglietti acquistati con: dati anagrafici, informazioni sulla corsa, dettagli di pagamento.
+
+SELECT 
+    cl.cod_fiscale,
+    cl.nome,
+    cl.cognome,
+    b.cod_biglietto,
+    b.data_emissione,
+    b.stato_biglietto,
+    c.id_corsa,
+    c.citta_partenza,
+    c.citta_arrivo,
+    c.data_partenza,
+    c.ora_partenza,
+    p.cod_transazione,
+    p.importo,
+    p.metodo_pagamento,
+    p.stato_pagamento
+FROM Cliente cl
+JOIN Biglietto b ON cl.cod_fiscale = b.cod_fiscale
+JOIN Corsa c     ON b.id_corsa     = c.id_corsa
+JOIN Pagamento p ON b.cod_transazione = p.cod_transazione
+WHERE cl.cod_fiscale = 'CF00000000000001'
+ORDER BY b.data_emissione DESC;
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+3) Dettaglio tratte di una corsa
+
+Cosa fa?
+Mostra: i dettagli della corsa scelta, tutte le tratte nell’ordine, e il prezzo minimo dei biglietti validi per quella corsa (sfruttando subquery - query annidata).
+
+SELECT 
+    ct.numero_fermate AS ordine_tratta,
+    t.id_tratta,
+    t.citta_partenza AS tratta_partenza,
+    t.citta_arrivo   AS tratta_arrivo,
+    t.distanza_km,
+    t.durata_minuti,
+    (
+      SELECT MIN(b2.prezzo)
+      FROM Biglietto b2
+      WHERE b2.id_corsa = c.id_corsa
+        AND b2.stato_biglietto = 'valido'
+    ) AS prezzo_minimo_corsa
+FROM Corsa c
+JOIN Corsa_Tratta ct ON c.id_corsa = ct.id_corsa
+JOIN Tratta t        ON ct.id_tratta = t.id_tratta
+WHERE c.id_corsa = 'CROMMIL'
+ORDER BY ct.numero_fermate;
+
+3bis)
+
+Cosa fa?
+Mostra: i dettagli della corsa scelta, tutte le tratte nell’ordine (sfruttando una vista -view-).
+
+CREATE VIEW v_corse_dettaglio_tratte AS
+SELECT
+    c.id_corsa,
+    ct.numero_fermate  AS ordine_tratta,
+    t.id_tratta,
+    t.citta_partenza   AS tratta_partenza,
+    t.citta_arrivo     AS tratta_arrivo,
+    t.distanza_km,
+    t.durata_minuti
+FROM Corsa c
+JOIN Corsa_Tratta ct ON c.id_corsa = ct.id_corsa
+JOIN Tratta t        ON ct.id_tratta = t.id_tratta;
+
+SELECT *
+FROM v_corse_dettaglio_tratte
+WHERE id_corsa = 'CROMMIL'
+ORDER BY ordine_tratta;
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+4) Fatturato per città_partenza / città_arrivo
+
+Cosa fa?
+Calcola fatturato e numero biglietti per coppia di città (solo biglietti validi in un periodo).
+
+SELECT
+    c.citta_partenza,
+    c.citta_arrivo,
+    SUM(b.prezzo) AS fatturato_totale,
+    COUNT(*)      AS numero_biglietti
+FROM Biglietto b
+JOIN Corsa c ON b.id_corsa = c.id_corsa
+WHERE b.data_emissione BETWEEN '2025-03-01' AND '2025-03-31'
+  AND b.stato_biglietto = 'valido'
+GROUP BY c.citta_partenza, c.citta_arrivo
+ORDER BY fatturato_totale DESC;
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+5a) Controllo di coerenza tra pagamenti e biglietti
+
+Cosa fa?
+Controlla se ci sono pagamenti senza biglietti associati
+
+SELECT
+    p.cod_transazione,
+    p.cod_fiscale,
+    p.importo,
+    p.data_pagamento,
+    p.metodo_pagamento
+FROM Pagamento p
+LEFT JOIN Biglietto b ON p.cod_transazione = b.cod_transazione
+WHERE b.cod_biglietto IS NULL;
+
+5b) 
+Cosa fa?
+Controlla se ci sono biglietti senza un pagamento corrispondente
+
+SELECT
+    b.cod_biglietto,
+    b.cod_fiscale,
+    b.cod_transazione,
+    b.data_emissione,
+    b.prezzo
+FROM Biglietto b
+LEFT JOIN Pagamento p ON b.cod_transazione = p.cod_transazione
+WHERE p.cod_transazione IS NULL;
